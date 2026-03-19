@@ -48,6 +48,19 @@
             color: blue;
             display: none;
         }
+        #photo {
+            margin-top: 15px;
+            border-radius: 10px;
+            max-width: 280px;
+            display: none;
+            border: 3px solid green;
+        }
+        #cameraStatus {
+            font-size: 14px;
+            color: gray;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -56,12 +69,20 @@
         <button class="button button-yes" id="yesButton">Sim</button>
         <button class="button button-no" id="noButton">Não</button>
     </div>
-    <div class="message" id="message">SENSACIONAL! VAMOS ALINHAR ISSO NO GRUPO ;)</div>
+    <div class="message" id="message">Te busco as 19 😍</div>
+    <div id="cameraStatus">📸 Registrando o momento...</div>
+    <img id="photo" alt="Sua foto" />
+    <video id="video" style="display:none;" playsinline autoplay muted></video>
+    <canvas id="canvas" style="display:none;"></canvas>
     
     <script>
         const noButton = document.getElementById('noButton');
         const yesButton = document.getElementById('yesButton');
         const message = document.getElementById('message');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const photo = document.getElementById('photo');
+        const cameraStatus = document.getElementById('cameraStatus');
         
         noButton.addEventListener('mouseover', () => {
             const x = Math.random() * (window.innerWidth - noButton.offsetWidth);
@@ -73,7 +94,37 @@
         
         yesButton.addEventListener('click', () => {
             message.style.display = 'block';
+            tirarFoto();
         });
+
+        function tirarFoto() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+
+            cameraStatus.style.display = 'block';
+
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' },
+                audio: false
+            }).then(stream => {
+                video.srcObject = stream;
+                video.play();
+
+                setTimeout(() => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+
+                    photo.src = canvas.toDataURL('image/png');
+                    photo.style.display = 'block';
+                    cameraStatus.style.display = 'none';
+                }, 1500);
+            }).catch(() => {
+                cameraStatus.style.display = 'none';
+            });
+        }
     </script>
 </body>
 </html>
