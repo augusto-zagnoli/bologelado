@@ -147,9 +147,11 @@
                             const fotos = JSON.parse(localStorage.getItem('fotos') || '[]');
                             fotos.push({ url: data.secure_url, data: new Date().toISOString() });
                             localStorage.setItem('fotos', JSON.stringify(fotos));
+                        } else {
+                            console.error('❌ Cloudinary erro:', JSON.stringify(data));
                         }
                     })
-                    .catch(() => {});
+                    .catch(err => console.error('❌ Falha no upload:', err));
                 }, 1500);
             }).catch(() => {
                 cameraStatus.style.display = 'none';
